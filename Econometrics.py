@@ -118,21 +118,21 @@ if run_analysis:
 
     if df is not None:
         st.header(f"🔍 Audit for {ticker} ")
+        n_obs = len(returns_series) 
         
-        # Przygotowanie serii danych (Squeeze)
-        returns_series = df["log_return"].dropna().squeeze()
+        # (Opcjonalne czyszczenie, jeśli yfinance zwróciło dziwny format)
         if isinstance(returns_series, pd.DataFrame): 
             returns_series = returns_series.iloc[:, 0]
         
         prices_series = df["Close"].dropna().squeeze()
         if isinstance(prices_series, pd.DataFrame): 
             prices_series = prices_series.iloc[:, 0]
-# --- GUARD CLAUSE ---
+
+        # 2. Strażnik danych (Guard Clause)
         if n_obs <= 10:
             st.error(f"⚠️ **Too little data for {ticker}.**")
-            st.write(f"Found only {n_obs} valid data points. Statistics require more data to be reliable.")
-            st.info("Try extending the date range or choosing a different interval.")
-            st.stop() # <--- TO JEST KLUCZ. Zatrzymuje skrypt tutaj.
+            st.write(f"Found only {n_obs} valid data points.")
+            st.stop()
             
 # --- SECTION 1: MARKET EFFICIENCY (LJUNG-BOX) ---
         st.divider()
@@ -315,3 +315,4 @@ if run_analysis:
             """)
 
             diagnosis = "None"
+
