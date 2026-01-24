@@ -325,10 +325,7 @@ if "df" in st.session_state and st.session_state.df is not None:
             """)
 
             diagnosis = "None"
-        else:
-        # Jeśli nikt jeszcze nie kliknął Execute
-        st.info("👈 Set the parameters and click 'Execute Analysis' to start.")
-        st.stop()
+
 
 
 
