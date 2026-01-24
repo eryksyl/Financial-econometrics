@@ -109,46 +109,40 @@ def fetch_data(symbol, start, end, interval): # Dodany parametr interval
         st.error(f"Error fetching data: {e}")
         return None
 
-# ==============================================================================
-# 4. MAIN INTERFACE & EXECUTION
-# ==============================================================================
-
+# 1. AKCJA: Pobieranie danych (tylko po kliknięciu przycisku)
 if run_analysis:
     with st.spinner(f"Analyzing {ticker}..."):
         fetched_df = fetch_data(ticker, start_date, end_date, interval_map[interval_input])
-        
         if fetched_df is not None and not fetched_df.empty:
-            # Pakujemy wszystko do schowka (session_state)
             st.session_state.df = fetched_df
             st.session_state.returns_series = fetched_df["log_return"].dropna().squeeze()
             st.session_state.prices_series = fetched_df["Close"].dropna().squeeze()
-            st.session_state.n_obs = len(st.session_state.returns_series)
         else:
-            st.error("❌ No data found for this ticker/range.")
+            st.error("❌ No data found.")
             st.stop()
 
-# --- THE GATEKEEPER ---
-# Jeśli nie kliknąłeś "Execute" albo nie ma danych - apka kończy pracę TUTAJ.
-if "df" not in st.session_state or st.session_state.df is None:
-    st.info("👈 Set the parameters and click 'Execute Analysis' to start.")
-    st.stop()
+# 2. WRAPPER (Śluza): Sprawdzamy, czy w ogóle mamy co analizować
+if "df" in st.session_state and st.session_state.df is not None:
+    # --- PRZYPISANIE I CZYSZCZENIE (isinstance zostaje tutaj!) ---
+    df = st.session_state.df
+    returns_series = st.session_state.returns_series
+    prices_series = st.session_state.prices_series
+    
+    # Naprawa formatu (jeśli Series stało się DataFrame)
+    if isinstance(returns_series, pd.DataFrame): 
+        returns_series = returns_series.iloc[:, 0]
+    if isinstance(prices_series, pd.DataFrame): 
+        prices_series = prices_series.iloc[:, 0]
+    
+    n_obs = len(returns_series)
+    
+    # 3. STRAŻNIK ILOŚCI DANYCH
+    if n_obs <= 10:
+        st.error(f"⚠️ Too little data ($N = {n_obs}$)")
+        st.stop()
 
-# --- DATA ASSIGNMENT (THE BRIDGE) ---
-# Wyciągamy dane ze schowka do nazw, których używa Twój stary kod
-df = st.session_state.df
-returns_series = st.session_state.returns_series
-prices_series = st.session_state.prices_series
-n_obs = st.session_state.n_obs
-
-# --- EMERGENCY CLEANUP (Dla pewności formatu) ---
-if isinstance(returns_series, pd.DataFrame): returns_series = returns_series.iloc[:, 0]
-if isinstance(prices_series, pd.DataFrame): prices_series = prices_series.iloc[:, 0]
-
-# --- DATA GUARD ---
-if n_obs <= 10:
-    st.error(f"⚠️ **Too little data ($N = {n_obs}$)**. Need at least 10 points.")
-    st.stop()
-st.header(f"🔍 Audit for {ticker}")
+    # --- NAGŁÓWEK AUDYTU ---
+    st.header(f"🔍 Audit for {ticker}")
             
 # --- SECTION 1: MARKET EFFICIENCY (LJUNG-BOX) ---
         st.divider()
@@ -331,5 +325,10 @@ st.header(f"🔍 Audit for {ticker}")
             """)
 
             diagnosis = "None"
+    else:
+    # Jeśli nikt jeszcze nie kliknął Execute
+    st.info("👈 Set the parameters and click 'Execute Analysis' to start.")
+    st.stop()
+
 
 
