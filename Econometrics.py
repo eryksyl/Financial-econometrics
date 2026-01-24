@@ -112,27 +112,43 @@ def fetch_data(symbol, start, end, interval): # Dodany parametr interval
 # ==============================================================================
 # 4. MAIN INTERFACE & EXECUTION
 # ==============================================================================
+
 if run_analysis:
     with st.spinner(f"Analyzing {ticker}..."):
-        df = fetch_data(ticker, start_date, end_date, interval_map[interval_input])
-
-    if df is not None:
-        st.header(f"🔍 Audit for {ticker} ")
-        n_obs = len(returns_series) 
+        fetched_df = fetch_data(ticker, start_date, end_date, interval_map[interval_input])
         
-        # (Opcjonalne czyszczenie, jeśli yfinance zwróciło dziwny format)
-        if isinstance(returns_series, pd.DataFrame): 
-            returns_series = returns_series.iloc[:, 0]
-        
-        prices_series = df["Close"].dropna().squeeze()
-        if isinstance(prices_series, pd.DataFrame): 
-            prices_series = prices_series.iloc[:, 0]
-
-        # 2. Strażnik danych (Guard Clause)
-        if n_obs <= 10:
-            st.error(f"⚠️ **Too little data for {ticker}.**")
-            st.write(f"Found only {n_obs} valid data points.")
+        if fetched_df is not None and not fetched_df.empty:
+            # Pakujemy wszystko do schowka (session_state)
+            st.session_state.df = fetched_df
+            st.session_state.returns_series = fetched_df["log_return"].dropna().squeeze()
+            st.session_state.prices_series = fetched_df["Close"].dropna().squeeze()
+            st.session_state.n_obs = len(st.session_state.returns_series)
+        else:
+            st.error("❌ No data found for this ticker/range.")
             st.stop()
+
+# --- THE GATEKEEPER ---
+# Jeśli nie kliknąłeś "Execute" albo nie ma danych - apka kończy pracę TUTAJ.
+if "df" not in st.session_state or st.session_state.df is None:
+    st.info("👈 Set the parameters and click 'Execute Analysis' to start.")
+    st.stop()
+
+# --- DATA ASSIGNMENT (THE BRIDGE) ---
+# Wyciągamy dane ze schowka do nazw, których używa Twój stary kod
+df = st.session_state.df
+returns_series = st.session_state.returns_series
+prices_series = st.session_state.prices_series
+n_obs = st.session_state.n_obs
+
+# --- EMERGENCY CLEANUP (Dla pewności formatu) ---
+if isinstance(returns_series, pd.DataFrame): returns_series = returns_series.iloc[:, 0]
+if isinstance(prices_series, pd.DataFrame): prices_series = prices_series.iloc[:, 0]
+
+# --- DATA GUARD ---
+if n_obs <= 10:
+    st.error(f"⚠️ **Too little data ($N = {n_obs}$)**. Need at least 10 points.")
+    st.stop()
+st.header(f"🔍 Audit for {ticker}")
             
 # --- SECTION 1: MARKET EFFICIENCY (LJUNG-BOX) ---
         st.divider()
@@ -315,4 +331,5 @@ if run_analysis:
             """)
 
             diagnosis = "None"
+
 
