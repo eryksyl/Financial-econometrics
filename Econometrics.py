@@ -143,7 +143,7 @@ if "df" in st.session_state and st.session_state.df is not None:
 
     # --- NAGŁÓWEK AUDYTU ---
     st.header(f"🔍 Audit for {ticker}")
-            
+    if True:        
 # --- SECTION 1: MARKET EFFICIENCY (LJUNG-BOX) ---
         st.divider()
         st.subheader("1. Market Efficiency & Autocorrelation")
@@ -329,6 +329,7 @@ if "df" in st.session_state and st.session_state.df is not None:
     # Jeśli nikt jeszcze nie kliknął Execute
     st.info("👈 Set the parameters and click 'Execute Analysis' to start.")
     st.stop()
+
 
 
 
