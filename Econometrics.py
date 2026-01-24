@@ -127,7 +127,13 @@ if run_analysis:
         prices_series = df["Close"].dropna().squeeze()
         if isinstance(prices_series, pd.DataFrame): 
             prices_series = prices_series.iloc[:, 0]
-
+# --- GUARD CLAUSE ---
+        if n_obs <= 10:
+            st.error(f"⚠️ **Too little data for {ticker}.**")
+            st.write(f"Found only {n_obs} valid data points. Statistics require more data to be reliable.")
+            st.info("Try extending the date range or choosing a different interval.")
+            st.stop() # <--- TO JEST KLUCZ. Zatrzymuje skrypt tutaj.
+            
 # --- SECTION 1: MARKET EFFICIENCY (LJUNG-BOX) ---
         st.divider()
         st.subheader("1. Market Efficiency & Autocorrelation")
@@ -307,4 +313,5 @@ if run_analysis:
             **⚠️ Warning:** Technical Analysis is highly unreliable here. Any patterns observed are likely 'Apophenia' (seeing patterns in random data). 
             - **Recommendation:** Save your capital. Wait for a regime change or move to a less efficient asset.
             """)
+
             diagnosis = "None"
