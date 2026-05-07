@@ -66,7 +66,7 @@ st.sidebar.header("🧪 Quant Research Lab")
 # ASSET SELECTION
 st.sidebar.subheader("1. Asset Selection")
 st.sidebar.caption("⚠️ Use Yahoo Finance symbols (e.g., QQQ, BTC-USD, AAPL, GC=F)")
-ticker = st.sidebar.text_input("Enter Ticker (Yahoo Finance)", value="ETH-USD")
+ticker = st.sidebar.text_input("Enter Ticker (Yahoo Finance)", value="QQQ")
 
 # TIME PARAMETERS
 st.sidebar.subheader("2. Time Horizon")
